@@ -2,17 +2,15 @@
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CustomerApi.Controllers;
-
-public class CustomersController
+namespace CustomerApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class OrdersController : ControllerBase
+    public class CustomersController : ControllerBase
     {
         private readonly IRepository<Customer> repository;
 
-        public OrdersController(IRepository<Customer> repos)
+        public CustomersController(IRepository<Customer> repos)
         {
             repository = repos;
         }
@@ -25,7 +23,7 @@ public class CustomersController
         }
 
         // GET orders/5
-        [HttpGet("{id}", Name = "GetOrder")]
+        [HttpGet("{id}", Name = "GetCustomer")]
         public IActionResult Get(int id)
         {
             var item = repository.Get(id);
@@ -47,14 +45,14 @@ public class CustomersController
 
             var newCustomer = repository.Add(customer);
 
-            return CreatedAtRoute("GetCustomer", new { id = newCustomer.CustomerId }, newCustomer);
+            return CreatedAtRoute("GetCustomer", new { id = newCustomer.Id }, newCustomer);
         }
         
         // PUT products/5
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody]Customer customer)
         {
-            if (customer == null || customer.CustomerId != id)
+            if (customer == null || customer.Id != id)
             {
                 return BadRequest();
             }
@@ -69,13 +67,12 @@ public class CustomersController
             modifiedCustomer.Name = customer.Name;
             modifiedCustomer.Email = customer.Email;
             modifiedCustomer.Phone = customer.Phone;
-            modifiedCustomer.billingAddress = customer.billingAddress;
-            modifiedCustomer.shippingAddress = customer.shippingAddress;
-            modifiedCustomer.creditStanding = customer.creditStanding;
+            modifiedCustomer.BillingAddress = customer.BillingAddress;
+            modifiedCustomer.ShippingAddress = customer.ShippingAddress;
+            modifiedCustomer.CreditStanding = customer.CreditStanding;
             
             repository.Edit(modifiedCustomer);
             return new NoContentResult();
         }
-
     }
 }

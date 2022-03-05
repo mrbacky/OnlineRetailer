@@ -19,7 +19,7 @@ public class DbInitializer: IDbInitializer
 
         List<Customer> customers = new List<Customer>
         {
-            new Customer {Name = "Nemeth Armand", Email = "armandnemeth.work@gmail.com",Phone = "204113562", billingAddress = "Stormgade 101",shippingAddress = "Stormgade 101",creditStanding = true}
+            new Customer {Name = "Nemeth Armand", Email = "armandnemeth.work@gmail.com",Phone = "204113562", BillingAddress = "Stormgade 101",ShippingAddress = "Stormgade 101",CreditStanding = true}
         };
 
         context.Customers.AddRange(customers);

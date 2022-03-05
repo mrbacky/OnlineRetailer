@@ -6,40 +6,42 @@ namespace CustomerApi.Data;
 
 public class CustomerRepository: IRepository<Customer>
 {
-    private readonly CustomerApiContext db;
-    
+    private readonly CustomerApiContext _db;
+
     public CustomerRepository(CustomerApiContext context)
     {
-        db = context;
+        _db = context;
     }
     
     public IEnumerable<Customer> GetAll()
     {
-        return db.Customers.ToList();
+        return _db.Customers.ToList();
     }
 
-    public Customer Get(int id)
+  
+
+    Customer IRepository<Customer>.Get(int id)
     {
-        return db.Customers.FirstOrDefault(o => o.CustomerId == id);
+        return _db.Customers.FirstOrDefault(o => o.Id == id);
     }
 
     public Customer Add(Customer entity)
     {
-        var newCustomer = db.Customers.Add(entity).Entity;
-        db.SaveChanges();
+        var newCustomer = _db.Customers.Add(entity).Entity;
+        _db.SaveChanges();
         return newCustomer;
     }
 
     public void Edit(Customer entity)
     {
-        db.Entry(entity).State = EntityState.Modified;
-        db.SaveChanges();
+        _db.Entry(entity).State = EntityState.Modified;
+        _db.SaveChanges();
     }
 
-    public void Remove(int id)
+    void IRepository<Customer>.Remove(int id)
     {
-        var customer = db.Customers.FirstOrDefault(p => p.CustomerId == id);
-        db.Customers.Remove(customer);
-        db.SaveChanges();
+        var customer = _db.Customers.FirstOrDefault(c => c.Id == id);
+        _db.Customers.Remove(customer);
+        _db.SaveChanges();
     }
 }
