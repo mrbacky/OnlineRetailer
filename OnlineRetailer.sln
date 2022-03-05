@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderApi", "OrderApi\OrderA
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{327DF6D7-6795-43DE-8CFB-0F57A2816E5E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerApi", "CustomerApi\CustomerApi.csproj", "{FFFB332C-4871-4EF5-B1B6-E17F0DC40D9F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,5 +27,9 @@ Global
 		{327DF6D7-6795-43DE-8CFB-0F57A2816E5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{327DF6D7-6795-43DE-8CFB-0F57A2816E5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{327DF6D7-6795-43DE-8CFB-0F57A2816E5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFFB332C-4871-4EF5-B1B6-E17F0DC40D9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFFB332C-4871-4EF5-B1B6-E17F0DC40D9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFFB332C-4871-4EF5-B1B6-E17F0DC40D9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFFB332C-4871-4EF5-B1B6-E17F0DC40D9F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
