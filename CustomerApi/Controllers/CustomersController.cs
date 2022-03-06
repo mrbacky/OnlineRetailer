@@ -8,25 +8,25 @@ namespace CustomerApi.Controllers
     [Route("[controller]")]
     public class CustomersController : ControllerBase
     {
-        private readonly IRepository<Customer> repository;
+        private readonly IRepository<Customer> _repository;
 
         public CustomersController(IRepository<Customer> repos)
         {
-            repository = repos;
+            _repository = repos;
         }
 
         // GET: orders
         [HttpGet]
         public IEnumerable<Customer> Get()
         {
-            return repository.GetAll();
+            return _repository.GetAll();
         }
 
         // GET orders/5
         [HttpGet("{id}", Name = "GetCustomer")]
         public IActionResult Get(int id)
         {
-            var item = repository.Get(id);
+            var item = _repository.Get(id);
             if (item == null)
             {
                 return NotFound();
@@ -43,36 +43,33 @@ namespace CustomerApi.Controllers
                 return BadRequest();
             }
 
-            var newCustomer = repository.Add(customer);
+            var newCustomer = _repository.Add(customer);
 
             return CreatedAtRoute("GetCustomer", new { id = newCustomer.Id }, newCustomer);
         }
         
         // PUT products/5
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]Customer customer)
+        [HttpPut()]
+        public IActionResult Put([FromBody]CustomerPutBindingModel model)
         {
-            if (customer == null || customer.Id != id)
+           
+            var foundCustomer = _repository.Get(model.Id);
+
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if (foundCustomer == null)
             {
-                return BadRequest();
+                return NotFound($"Customer with Id: [{model.Id}] was not found.");
             }
 
-            var modifiedCustomer = repository.Get(id);
-
-            if (modifiedCustomer == null)
-            {
-                return NotFound();
-            }
-
-            modifiedCustomer.Name = customer.Name;
-            modifiedCustomer.Email = customer.Email;
-            modifiedCustomer.Phone = customer.Phone;
-            modifiedCustomer.BillingAddress = customer.BillingAddress;
-            modifiedCustomer.ShippingAddress = customer.ShippingAddress;
-            modifiedCustomer.CreditStanding = customer.CreditStanding;
+            var modifiedCustomer = foundCustomer;
+            modifiedCustomer.Email = !string.IsNullOrEmpty(model.Email) ? model.Email : foundCustomer.Email;
+            modifiedCustomer.Phone = !string.IsNullOrEmpty(model.Phone) ? model.Phone : foundCustomer.Phone;
+            modifiedCustomer.BillingAddress = !string.IsNullOrEmpty(model.BillingAddress) ? model.BillingAddress : foundCustomer.BillingAddress;
+            modifiedCustomer.ShippingAddress = !string.IsNullOrEmpty(model.ShippingAddress) ? model.ShippingAddress : foundCustomer.ShippingAddress;
             
-            repository.Edit(modifiedCustomer);
-            return new NoContentResult();
+            _repository.Edit(modifiedCustomer);
+            return new ObjectResult(modifiedCustomer);
+
         }
     }
 }
