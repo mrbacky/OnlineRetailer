@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +27,7 @@ namespace ProductApi
             services.AddDbContext<ProductApiContext>(opt => opt.UseInMemoryDatabase("ProductsDb"));
 
             // Register repositories for dependency injection
-            services.AddScoped<IRepository<Product>, ProductRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
 
             // Register database initializer for dependency injection
             services.AddTransient<IDbInitializer, DbInitializer>();
@@ -46,7 +48,7 @@ namespace ProductApi
                 var services = scope.ServiceProvider;
                 var dbContext = services.GetService<ProductApiContext>();
                 var dbInitializer = services.GetService<IDbInitializer>();
-                dbInitializer.Initialize(dbContext);
+                dbInitializer?.Initialize(dbContext);
             }
 
             if (env.IsDevelopment())
@@ -65,6 +67,14 @@ namespace ProductApi
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
             });
+            
+            app.UseExceptionHandler(a => a.Run(async context =>
+            {
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                var exception = exceptionHandlerPathFeature?.Error;
+    
+                await context.Response.WriteAsJsonAsync(new { error = exception?.Message });
+            }));
 
             app.UseRouting();
 

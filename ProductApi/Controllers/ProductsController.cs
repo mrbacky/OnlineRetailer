@@ -9,30 +9,37 @@ namespace ProductApi.Controllers
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly IRepository<Product> repository;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsController(IRepository<Product> repos)
+        public ProductsController(IProductRepository productProductRepository)
         {
-            repository = repos;
+            _productRepository = productProductRepository;
         }
 
         // GET products
         [HttpGet]
-        public IEnumerable<Product> Get()
+        public IEnumerable<Product> GetAll()
         {
-            return repository.GetAll();
+            return _productRepository.GetAll();
         }
 
         // GET products/5
         [HttpGet("{id}", Name="GetProduct")]
-        public IActionResult Get(int id)
+        public IActionResult GetById(int id)
         {
-            var item = repository.Get(id);
+            var item = _productRepository.Get(id);
             if (item == null)
             {
                 return NotFound();
             }
-            return new ObjectResult(item);
+            return Ok(item);
+        }
+
+        [HttpGet("InRange")]
+        public IActionResult GetInRange([FromBody] IEnumerable<int> productIds)
+        {
+            var products = _productRepository.GetInRange(productIds);
+            return Ok(products);
         }
 
         // POST products
@@ -44,7 +51,7 @@ namespace ProductApi.Controllers
                 return BadRequest();
             }
 
-            var newProduct = repository.Add(product);
+            var newProduct = _productRepository.Add(product);
 
             return CreatedAtRoute("GetProduct", new { id = newProduct.Id }, newProduct);
         }
@@ -58,7 +65,7 @@ namespace ProductApi.Controllers
                 return BadRequest();
             }
 
-            var modifiedProduct = repository.Get(id);
+            var modifiedProduct = _productRepository.Get(id);
 
             if (modifiedProduct == null)
             {
@@ -70,21 +77,42 @@ namespace ProductApi.Controllers
             modifiedProduct.ItemsInStock = product.ItemsInStock;
             modifiedProduct.ItemsReserved = product.ItemsReserved;
 
-            repository.Edit(modifiedProduct);
-            return new NoContentResult();
+            _productRepository.Edit(modifiedProduct);
+            return NoContent();
+        }
+
+        [HttpPost("Reserve")]
+        public IActionResult ReserveProducts([FromBody] IEnumerable<ProductData> productData)
+        {
+            _productRepository.ReserveProducts(productData);
+            return NoContent();
+        }
+        
+        [HttpPost("Sell")]
+        public IActionResult SellProducts([FromBody] IEnumerable<ProductData> productData)
+        {
+            _productRepository.SellProducts(productData);
+            return NoContent();
         }
 
         // DELETE products/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (repository.Get(id) == null)
+            if (_productRepository.Get(id) == null)
             {
                 return NotFound();
             }
 
-            repository.Remove(id);
-            return new NoContentResult();
+            _productRepository.Remove(id);
+            return NoContent();
+        }
+        
+        [HttpDelete("Reserve")]
+        public IActionResult DeleteReservationOnProducts([FromBody] IEnumerable<ProductData> productData)
+        {
+            _productRepository.DeleteReservationOnProducts(productData);
+            return NoContent();
         }
     }
 }
