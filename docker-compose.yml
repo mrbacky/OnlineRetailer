@@ -1,8 +1,21 @@
 version: '3.4'
 
 services:
+  customerapi:
+#    image: ${DOCKER_REGISTRY-}customerapi
+    build:
+      context: .
+      dockerfile: CustomerApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "6080:80"
+    volumes:
+      - ~/.aspnet/https:/root/.aspnet/https:ro
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
   productapi:
-    image: ${DOCKER_REGISTRY-}productapi
+#    image: ${DOCKER_REGISTRY-}productapi
     build:
       context: .
       dockerfile: ProductApi/Dockerfile
@@ -15,7 +28,7 @@ services:
       - ~/.aspnet/https:/root/.aspnet/https:ro
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
   orderapi:
-    image: ${DOCKER_REGISTRY-}orderapi
+#    image: ${DOCKER_REGISTRY-}orderapi
     build:
       context: .
       dockerfile: OrderApi/Dockerfile
@@ -27,3 +40,4 @@ services:
     volumes:
       - ~/.aspnet/https:/root/.aspnet/https:ro
       - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+  

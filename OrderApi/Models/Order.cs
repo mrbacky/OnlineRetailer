@@ -1,11 +1,14 @@
 ﻿using System;
-namespace OrderApi.Models
+using System.Collections.Generic;
+
+namespace OrderApi.Models;
+
+public class Order
 {
-    public class Order
-    {
-        public int Id { get; set; }
-        public DateTime? Date { get; set; }
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
-    }
+    public int Id { get; set; }
+    public DateTime? Date { get; set; }
+
+    public IEnumerable<OrderItem> OrderItems { get; set; }
+
+    public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;
 }
