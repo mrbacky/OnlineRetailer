@@ -1,10 +1,10 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 using OrderApi.Data;
 using OrderApi.Models;
 
@@ -30,10 +30,16 @@ public class Startup
 
         // Register database initializer for dependency injection
         services.AddTransient<IDbInitializer, DbInitializer>();
+        // JsonSerializerOptions options = new()
+        // {
+        //     ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        //     WriteIndented = true
+        // };
 
-        services.AddControllers().AddNewtonsoftJson(option =>
+
+        services.AddControllers().AddJsonOptions(options =>
         {
-            option.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         });
     }
 
