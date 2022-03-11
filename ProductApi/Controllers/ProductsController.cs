@@ -81,6 +81,20 @@ namespace ProductApi.Controllers
             return NoContent();
         }
 
+        [HttpPost("Reserve")]
+        public IActionResult ReserveProducts([FromBody] IEnumerable<ProductData> productData)
+        {
+            _productRepository.ReserveProducts(productData);
+            return NoContent();
+        }
+        
+        [HttpPost("Sell")]
+        public IActionResult SellProducts([FromBody] IEnumerable<ProductData> productData)
+        {
+            _productRepository.SellProducts(productData);
+            return NoContent();
+        }
+
         // DELETE products/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
@@ -91,6 +105,13 @@ namespace ProductApi.Controllers
             }
 
             _productRepository.Remove(id);
+            return NoContent();
+        }
+        
+        [HttpDelete("Reserve")]
+        public IActionResult DeleteReservationOnProducts([FromBody] IEnumerable<ProductData> productData)
+        {
+            _productRepository.DeleteReservationOnProducts(productData);
             return NoContent();
         }
     }

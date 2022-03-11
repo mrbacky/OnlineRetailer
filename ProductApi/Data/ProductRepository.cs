@@ -47,6 +47,41 @@ namespace ProductApi.Data
             return products;
         }
 
+        public void ReserveProducts(IEnumerable<ProductData> productData)
+        {
+            foreach (var p in productData)
+            {
+                var product = ((IRepository<Product>) this).Get(p.ProductId);
+                product.ItemsReserved += p.Quantity;
+                product.ItemsInStock -= p.Quantity;
+                _db.Entry(product).State = EntityState.Modified;
+            }
+            _db.SaveChanges();
+        }
+
+        public void SellProducts(IEnumerable<ProductData> productData)
+        {
+            foreach (var p in productData)
+            {
+                var product = ((IRepository<Product>) this).Get(p.ProductId);
+                product.ItemsReserved -= p.Quantity;
+                _db.Entry(product).State = EntityState.Modified;
+            }
+            _db.SaveChanges();
+        }
+
+        public void DeleteReservationOnProducts(IEnumerable<ProductData> productData)
+        {
+            foreach (var p in productData)
+            {
+                var product = ((IRepository<Product>) this).Get(p.ProductId);
+                product.ItemsReserved -= p.Quantity;
+                product.ItemsInStock += p.Quantity;
+                _db.Entry(product).State = EntityState.Modified;
+            }
+            _db.SaveChanges();
+        }
+
         void IRepository<Product>.Remove(int id)
         {
             var product = _db.Products.FirstOrDefault(p => p.Id == id);
