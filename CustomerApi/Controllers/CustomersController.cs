@@ -17,47 +17,48 @@ namespace CustomerApi.Controllers
 
         // GET: orders
         [HttpGet]
-        public IEnumerable<Customer> Get()
-        {
-            return repository.GetAll();
+        public async Task<IActionResult> Get()
+        { 
+                var result = await repository.GetAll();
+                return Ok(result);
         }
 
         // GET orders/5
         [HttpGet("{id}", Name = "GetCustomer")]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var item = repository.Get(id);
+            var item = await repository.Get(id);
             if (item == null)
             {
                 return NotFound();
             }
-            return new ObjectResult(item);
+            return Ok(item);
         }
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody]Customer customer)
+        public async Task<IActionResult> Post([FromBody]Customer customer)
         {
             if (customer == null)
             {
                 return BadRequest();
             }
 
-            var newCustomer = repository.Add(customer);
+            var newCustomer = await repository.Add(customer);
 
             return CreatedAtRoute("GetCustomer", new { id = newCustomer.Id }, newCustomer);
         }
         
         // PUT products/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]Customer customer)
+        public async Task<IActionResult> Put(int id, [FromBody]Customer customer)
         {
             if (customer == null || customer.Id != id)
             {
                 return BadRequest();
             }
 
-            var modifiedCustomer = repository.Get(id);
+            var modifiedCustomer = await repository.Get(id);
 
             if (modifiedCustomer == null)
             {
@@ -71,8 +72,21 @@ namespace CustomerApi.Controllers
             modifiedCustomer.ShippingAddress = customer.ShippingAddress;
             modifiedCustomer.CreditStanding = customer.CreditStanding;
             
-            repository.Edit(modifiedCustomer);
+            await repository.Edit(modifiedCustomer);
             return new NoContentResult();
+        }
+
+        [HttpDelete]
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await repository.Remove(id);
+            return Ok();
         }
     }
 }
