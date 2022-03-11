@@ -5,43 +5,55 @@ using ProductApi.Models;
 
 namespace ProductApi.Data
 {
-    public class ProductRepository : IRepository<Product>
+    public class ProductRepository : IProductRepository
     {
-        private readonly ProductApiContext db;
+        private readonly ProductApiContext _db;
 
         public ProductRepository(ProductApiContext context)
         {
-            db = context;
+            _db = context;
         }
 
         Product IRepository<Product>.Add(Product entity)
         {
-            var newProduct = db.Products.Add(entity).Entity;
-            db.SaveChanges();
+            var newProduct = _db.Products.Add(entity).Entity;
+            _db.SaveChanges();
             return newProduct;
         }
 
         void IRepository<Product>.Edit(Product entity)
         {
-            db.Entry(entity).State = EntityState.Modified;
-            db.SaveChanges();
+            _db.Entry(entity).State = EntityState.Modified;
+            _db.SaveChanges();
         }
 
         Product IRepository<Product>.Get(int id)
         {
-            return db.Products.FirstOrDefault(p => p.Id == id);
+            return _db.Products.FirstOrDefault(p => p.Id == id);
         }
 
         IEnumerable<Product> IRepository<Product>.GetAll()
         {
-            return db.Products.ToList();
+            return _db.Products.ToList();
+        }
+        
+        public IEnumerable<Product> GetInRange(IEnumerable<int> productIds)
+        {
+            var products = (
+                from product in _db.Products 
+                where productIds.Contains(product.Id) 
+                select product).ToList();
+            
+            return products;
         }
 
         void IRepository<Product>.Remove(int id)
         {
-            var product = db.Products.FirstOrDefault(p => p.Id == id);
-            db.Products.Remove(product);
-            db.SaveChanges();
+            var product = _db.Products.FirstOrDefault(p => p.Id == id);
+            if (product is null)
+                return;
+            _db.Products.Remove(product);
+            _db.SaveChanges();
         }
     }
 }
