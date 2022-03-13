@@ -20,10 +20,11 @@ public class OrderRepository : IRepository<Order>
         if (entity.Date == null)
             entity.Date = DateTime.Now;
 
-        var newOrder = db.Orders.Add(entity).Entity;
+        var newOrder = db.Add(entity).Entity;
         db.SaveChanges();
         return newOrder;
     }
+
 
     void IRepository<Order>.Edit(Order entity)
     {

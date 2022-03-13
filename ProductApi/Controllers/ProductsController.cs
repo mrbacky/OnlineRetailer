@@ -69,6 +69,15 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    // Updates list of products
+    [HttpPut("updateCollection")]
+    public IActionResult Put([FromBody] List<Product> products)
+    {
+        if (products == null) return BadRequest();
+        foreach (var product in products) _productRepository.Edit(product);
+        return NoContent();
+    }
+
     // DELETE products/5
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)

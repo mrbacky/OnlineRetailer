@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
-using OrderApi.Dtos;
 using OrderApi.Models;
 using RestSharp;
 
@@ -38,28 +38,28 @@ public class OrdersController : ControllerBase
 
     // POST orders
     [HttpPost]
-    public IActionResult Post([FromBody] CreateOrderDto createOrderDto)
+    public IActionResult Post([FromBody] Order createOrder)
     {
-        if (createOrderDto == null) return BadRequest();
+        if (createOrder == null) return BadRequest();
 
         // fetching customer
         var customerService = new RestClient("http://localhost:6000/customers");
-        var customerRequest = new RestRequest(createOrderDto.CustomerId.ToString());
+        var customerRequest = new RestRequest(createOrder.CustomerId.ToString());
         var customerResponse = customerService.GetAsync<Customer>(customerRequest);
         customerResponse.Wait();
         var foundCustomer = customerResponse.Result;
 
         // customer null check
         if (foundCustomer == null || foundCustomer.Id == 0)
-            return NotFound($"Customer with Id: {createOrderDto.CustomerId} does not exist.");
+            return NotFound($"Customer with Id: {createOrder.CustomerId} does not exist.");
 
         // Customer orders check
         if (foundCustomer.hasOutstandingBills)
             return BadRequest("Order declined. You have already an order you need to pay for.");
 
         // Get products from order
-        var productIds = createOrderDto.OrderItems.Select(oi => oi.ProductId).ToArray();
-        var productService = new RestClient("http://localhost:6000/products/inRange");
+        var productIds = createOrder.OrderItems.Select(oi => oi.ProductId).ToArray();
+        var productService = new RestClient("http://localhost:8000/products/inRange");
         var productRequest = new RestRequest().AddJsonBody(productIds);
         var productResponse = productService.GetAsync<List<Product>>(productRequest);
         productResponse.Wait();
@@ -69,7 +69,7 @@ public class OrdersController : ControllerBase
         if (orderedProducts is not null)
             foreach (var prod in orderedProducts)
             {
-                var matchedOrderItem = createOrderDto.OrderItems.First(oi => oi.ProductId == prod.Id);
+                var matchedOrderItem = createOrder.OrderItems.First(oi => oi.ProductId == prod.Id);
                 var isItemAvailable = matchedOrderItem.Quantity <= prod.ItemsInStock - prod.ItemsReserved;
                 if (isItemAvailable)
                     prod.ItemsReserved += matchedOrderItem.Quantity;
@@ -79,18 +79,27 @@ public class OrdersController : ControllerBase
                         $"Available items in stock: {prod.ItemsInStock}");
             }
 
+        var productsToUpdate = orderedProducts!;
         // Update products in product service
-        // var updateRequest = new RestRequest(orderedProduct.Id.ToString());
-        // updateRequest.AddJsonBody(orderedProduct);
-        // var updateResponse = c.PutAsync(updateRequest);
-        // updateResponse.Wait();
-        //
-        // if (updateResponse.IsCompletedSuccessfully)
-        // {
-        //     var newOrder = repository.Add(order);
-        //     return CreatedAtRoute("GetOrder",
-        //         new {id = newOrder.Id}, newOrder);
-        // }
+        productService = new RestClient("http://localhost:8000/products/updateCollection");
+        var updateProductRequest = new RestRequest().AddJsonBody(productsToUpdate);
+        var updateProductsResponse = productService.PutAsync(updateProductRequest);
+        updateProductsResponse.Wait();
+
+
+        if (updateProductsResponse.IsCompletedSuccessfully)
+        {
+            var newOrder = new Order
+            {
+                Date = DateTime.Now,
+                CustomerId = createOrder.CustomerId,
+                OrderItems = createOrder.OrderItems,
+                OrderStatus = OrderStatus.Accepted
+            };
+            var created = repository.Add(newOrder);
+            return CreatedAtRoute("GetOrder",
+                new {id = created.Id}, created);
+        }
 
         // If the order could not be created, "return no content".
         return NoContent();
