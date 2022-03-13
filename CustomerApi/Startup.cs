@@ -1,4 +1,5 @@
-﻿using CustomerApi.Data;
+﻿using System.Text.Json.Serialization;
+using CustomerApi.Data;
 using CustomerApi.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,7 +26,10 @@ public class Startup
         // Register database initializer for dependency injection
         services.AddTransient<IDbInitializer, DbInitializer>();
 
-        services.AddControllers();
+        services.AddControllers().AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
