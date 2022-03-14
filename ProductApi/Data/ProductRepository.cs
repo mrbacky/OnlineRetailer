@@ -53,7 +53,6 @@ namespace ProductApi.Data
             {
                 var product = ((IRepository<Product>) this).Get(p.ProductId);
                 product.ItemsReserved += p.Quantity;
-                product.ItemsInStock -= p.Quantity;
                 _db.Entry(product).State = EntityState.Modified;
             }
             _db.SaveChanges();
@@ -65,6 +64,7 @@ namespace ProductApi.Data
             {
                 var product = ((IRepository<Product>) this).Get(p.ProductId);
                 product.ItemsReserved -= p.Quantity;
+                product.ItemsInStock -= p.Quantity;
                 _db.Entry(product).State = EntityState.Modified;
             }
             _db.SaveChanges();
@@ -76,7 +76,6 @@ namespace ProductApi.Data
             {
                 var product = ((IRepository<Product>) this).Get(p.ProductId);
                 product.ItemsReserved -= p.Quantity;
-                product.ItemsInStock += p.Quantity;
                 _db.Entry(product).State = EntityState.Modified;
             }
             _db.SaveChanges();
