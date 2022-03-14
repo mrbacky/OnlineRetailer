@@ -84,14 +84,45 @@ namespace ProductApi.Controllers
         [HttpPost("Reserve")]
         public IActionResult ReserveProducts([FromBody] IEnumerable<ProductData> productData)
         {
-            _productRepository.ReserveProducts(productData);
+            foreach (var prod in productData)
+            {
+                var product = _productRepository.Get(prod.ProductId);
+                if (product is null)
+                {
+                    return BadRequest($"Product with ID: {prod.ProductId} does not exist");
+                }
+                if (product.AvailableToOrder < prod.Quantity)
+                {
+                    return BadRequest(
+                        $"Not enough items available to make this reservation. " +
+                        $"Item ID: {product.Id}, Name: {product.Name}, " +
+                        $"Available: {product.AvailableToOrder}, Requested: {prod.Quantity}");
+                }
+                
+                product.ItemsReserved += prod.Quantity;
+                _productRepository.Edit(product);
+            }
+            //_productRepository.ReserveProducts(productData);
             return NoContent();
         }
         
         [HttpPost("Sell")]
         public IActionResult SellProducts([FromBody] IEnumerable<ProductData> productData)
         {
-            _productRepository.SellProducts(productData);
+            foreach (var prod in productData)
+            {
+                var product = _productRepository.Get(prod.ProductId);
+                if (product is null)
+                {
+                    return BadRequest($"Product with ID: {prod.ProductId} does not exist");
+                }
+
+                product.ItemsReserved -= prod.Quantity;
+                product.ItemsInStock -= prod.Quantity;
+                
+                _productRepository.Edit(product);
+            }
+            //_productRepository.SellProducts(productData);
             return NoContent();
         }
 
@@ -111,7 +142,18 @@ namespace ProductApi.Controllers
         [HttpDelete("Reserve")]
         public IActionResult DeleteReservationOnProducts([FromBody] IEnumerable<ProductData> productData)
         {
-            _productRepository.DeleteReservationOnProducts(productData);
+            foreach (var prod in productData)
+            {
+                var product = _productRepository.Get(prod.ProductId);
+                if (product is null)
+                {
+                    return BadRequest($"Product with ID: {prod.ProductId} does not exist");
+                }
+
+                product.ItemsReserved -= prod.Quantity;
+                _productRepository.Edit(product);
+            }
+            //_productRepository.DeleteReservationOnProducts(productData);
             return NoContent();
         }
     }
