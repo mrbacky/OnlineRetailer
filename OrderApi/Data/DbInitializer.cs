@@ -1,31 +1,46 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using OrderApi.Models;
-using System;
 
-namespace OrderApi.Data
+namespace OrderApi.Data;
+
+public class DbInitializer : IDbInitializer
 {
-    public class DbInitializer : IDbInitializer
+    // This method will create and seed the database.
+    public void Initialize(OrderApiContext context)
     {
-        // This method will create and seed the database.
-        public void Initialize(OrderApiContext context)
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+
+        // Look for any Products
+        if (context.Orders.Any()) return; // DB has been seeded
+
+        var orderItem1 = new OrderItem
         {
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            ProductId = 1,
+            OrderId = 1,
+            Quantity = 3
+        };
 
-            // Look for any Products
-            if (context.Orders.Any())
+        var orderItem2 = new OrderItem
+        {
+            ProductId = 2,
+            OrderId = 1,
+            Quantity = 9
+        };
+
+
+        var orders = new List<Order>
+        {
+            new()
             {
-                return;   // DB has been seeded
+                Date = DateTime.Now,
+                OrderItems = new List<OrderItem> {orderItem1, orderItem2}
             }
+        };
 
-            List<Order> orders = new List<Order>
-            {
-                new Order { Date = DateTime.Today, ProductId = 1, Quantity = 2 }
-            };
-
-            context.Orders.AddRange(orders);
-            context.SaveChanges();
-        }
+        context.Orders.AddRange(orders);
+        context.SaveChanges();
     }
 }
