@@ -9,5 +9,7 @@ public class Product
     public decimal Price { get; set; }
     public int ItemsInStock { get; set; }
     public int ItemsReserved { get; set; }
+
+    public int AvailableToOrder => ItemsInStock - ItemsReserved;
     public IEnumerable<OrderItem> OrderItems { get; set; }
 }

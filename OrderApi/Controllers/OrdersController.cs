@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
@@ -38,16 +39,16 @@ public class OrdersController : ControllerBase
 
     // POST orders
     [HttpPost]
-    public IActionResult Post([FromBody] Order createOrder)
+    public async Task<IActionResult> Post([FromBody] Order createOrder)
     {
         if (createOrder == null) return BadRequest();
 
         // fetching customer
         var customerService = new RestClient("http://localhost:6000/customers");
         var customerRequest = new RestRequest(createOrder.CustomerId.ToString());
-        var customerResponse = customerService.GetAsync<Customer>(customerRequest);
-        customerResponse.Wait();
-        var foundCustomer = customerResponse.Result;
+        var customerResponse = await customerService.GetAsync<Customer>(customerRequest);
+        // customerResponse.Wait();
+        var foundCustomer = customerResponse;
 
         // customer null check
         if (foundCustomer == null || foundCustomer.Id == 0)
@@ -70,13 +71,13 @@ public class OrdersController : ControllerBase
             foreach (var prod in orderedProducts)
             {
                 var matchedOrderItem = createOrder.OrderItems.First(oi => oi.ProductId == prod.Id);
-                var isItemAvailable = matchedOrderItem.Quantity <= prod.ItemsInStock - prod.ItemsReserved;
+                var isItemAvailable = matchedOrderItem.Quantity <= prod.AvailableToOrder;
                 if (isItemAvailable)
                     prod.ItemsReserved += matchedOrderItem.Quantity;
                 else if (!isItemAvailable)
                     return NotFound(
                         $"There is not enough items of product: ID: {prod.Id}, Product Name: {prod.Name}. " +
-                        $"Available items in stock: {prod.ItemsInStock}");
+                        $"Available items for order: {prod.AvailableToOrder}");
             }
 
         var productsToUpdate = orderedProducts!;

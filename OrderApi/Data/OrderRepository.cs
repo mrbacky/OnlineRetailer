@@ -39,7 +39,7 @@ public class OrderRepository : IRepository<Order>
 
     IEnumerable<Order> IRepository<Order>.GetAll()
     {
-        return db.Orders.ToList();
+        return db.Orders.Include(o => o.OrderItems).ToList();
     }
 
     void IRepository<Order>.Remove(int id)
