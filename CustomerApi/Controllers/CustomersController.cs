@@ -22,14 +22,21 @@ public class CustomersController : ControllerBase
         return _repository.GetAll();
     }
 
-    // GET orders/5
+    
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public IActionResult GetCustomerById(int id)
     {
         var item = _repository.Get(id);
         if (item == null) return NotFound();
         return new ObjectResult(item);
     }
+        
+        [HttpGet]
+        public async Task<IActionResult> GetAllCustomers()
+        { 
+                var result = await repository.GetAll();
+                return Ok(result);
+        }
 
     // POST orders
     [HttpPost]
@@ -63,5 +70,20 @@ public class CustomersController : ControllerBase
 
         _repository.Edit(modifiedCustomer);
         return new ObjectResult(modifiedCustomer);
+    
+        }
+
+        [HttpDelete]
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await repository.Remove(id);
+            return Ok();
+        }
     }
 }

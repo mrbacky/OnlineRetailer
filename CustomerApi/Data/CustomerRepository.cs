@@ -13,35 +13,41 @@ public class CustomerRepository: IRepository<Customer>
         _db = context;
     }
     
-    public IEnumerable<Customer> GetAll()
+    public async Task<IEnumerable<Customer>> GetAll()
     {
-        return _db.Customers.ToList();
+        return await _db.Customers.ToListAsync();
     }
 
-  
 
-    Customer IRepository<Customer>.Get(int id)
+   public async Task<Customer?> Get(int id)
     {
-        return _db.Customers.FirstOrDefault(o => o.Id == id);
+        return  await _db.Customers.FirstAsync(c => c.Id == id);
     }
 
-    public Customer Add(Customer entity)
+    public async Task<Customer> Add(Customer entity)
     {
-        var newCustomer = _db.Customers.Add(entity).Entity;
-        _db.SaveChanges();
-        return newCustomer;
+        var newCustomer = await _db.Customers.AddAsync(entity);
+        await _db.SaveChangesAsync();
+        return  newCustomer.Entity;
     }
 
-    public void Edit(Customer entity)
-    {
+    public async Task Edit(Customer entity)
+    { 
         _db.Entry(entity).State = EntityState.Modified;
-        _db.SaveChanges();
+      await  _db.SaveChangesAsync();
     }
 
-    void IRepository<Customer>.Remove(int id)
+  public async Task  Remove(int id)
     {
-        var customer = _db.Customers.FirstOrDefault(c => c.Id == id);
+        var customer = await _db.Customers.FirstAsync(c => c.Id == id);
         _db.Customers.Remove(customer);
-        _db.SaveChanges();
+       await _db.SaveChangesAsync();
     }
+
+  public async Task ChangeCreditStanding(int customerId, int creditchange)
+  {
+      var customer = await _db.Customers.FirstAsync(c => c.Id == customerId);
+     // _db.Entry(customer).Entity.CreditStanding + creditchange;
+
+  }
 }
