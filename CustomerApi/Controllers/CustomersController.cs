@@ -17,43 +17,37 @@ public class CustomersController : ControllerBase
 
     // GET: orders
     [HttpGet]
-    public IEnumerable<Customer> Get()
+    public async Task<IActionResult> GetAllCustomers()
     {
-        return _repository.GetAll();
+        var customers = await _repository.GetAll();
+        return Ok(customers);
     }
 
-    
+
     [HttpGet("{id}")]
     public IActionResult GetCustomerById(int id)
     {
-        var item = _repository.Get(id);
-        if (item == null) return NotFound();
-        return new ObjectResult(item);
+        var customer = _repository.Get(id);
+        if (customer == null) return NotFound();
+        return Ok(customer);
     }
-        
-        [HttpGet]
-        public async Task<IActionResult> GetAllCustomers()
-        { 
-                var result = await repository.GetAll();
-                return Ok(result);
-        }
 
     // POST orders
     [HttpPost]
-    public IActionResult Post([FromBody] Customer customer)
+    public async Task<IActionResult> CreateCustomerAsync([FromBody] Customer customer)
     {
         if (customer == null) return BadRequest();
 
-        var newCustomer = _repository.Add(customer);
-
-        return CreatedAtRoute("GetCustomer", new {id = newCustomer.Id}, newCustomer);
+        var newCustomer = await _repository.Add(customer);
+        var created = await _repository.Get(newCustomer.Id);
+        return Ok(created);
     }
 
     // PUT products/5
     [HttpPut]
-    public IActionResult Put([FromBody] CustomerPutBindingModel model)
+    public async Task<IActionResult> Put([FromBody] CustomerPutBindingModel model)
     {
-        var foundCustomer = _repository.Get(model.Id);
+        var foundCustomer = await _repository.Get(model.Id);
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (foundCustomer == null) return NotFound($"Customer with Id: [{model.Id}] was not found.");
@@ -68,22 +62,16 @@ public class CustomersController : ControllerBase
             ? model.ShippingAddress
             : foundCustomer.ShippingAddress;
 
-        _repository.Edit(modifiedCustomer);
+        await _repository.Edit(modifiedCustomer);
         return new ObjectResult(modifiedCustomer);
-    
-        }
+    }
 
-        [HttpDelete]
+    [HttpDelete]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (id == null) return NotFound();
 
-        public async Task<IActionResult> Delete(int id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            await repository.Remove(id);
-            return Ok();
-        }
+        await _repository.Remove(id);
+        return Ok();
     }
 }
