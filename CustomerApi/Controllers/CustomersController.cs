@@ -76,31 +76,38 @@ public class CustomersController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Put([FromBody] CustomerPutBindingModel model)
     {
-        var foundCustomer = await _repository.Get(model.Id);
+        var customer = await _repository.Get(model.Id);
+        if (customer == null) 
+            return NotFound($"Customer with Id: [{model.Id}] was not found.");
 
-        if (foundCustomer == null) return NotFound($"Customer with Id: [{model.Id}] was not found.");
-
-        var modifiedCustomer = foundCustomer;
-        modifiedCustomer.Email = !string.IsNullOrEmpty(model.Email) ? model.Email : foundCustomer.Email;
-        modifiedCustomer.Phone = !string.IsNullOrEmpty(model.Phone) ? model.Phone : foundCustomer.Phone;
+        var modifiedCustomer = customer;
+        modifiedCustomer.Email = !string.IsNullOrEmpty(model.Email) 
+            ? model.Email 
+            : customer.Email;
+        modifiedCustomer.Phone = !string.IsNullOrEmpty(model.Phone) 
+            ? model.Phone 
+            : customer.Phone;
         modifiedCustomer.BillingAddress = !string.IsNullOrEmpty(model.BillingAddress)
             ? model.BillingAddress
-            : foundCustomer.BillingAddress;
+            : customer.BillingAddress;
         modifiedCustomer.ShippingAddress = !string.IsNullOrEmpty(model.ShippingAddress)
             ? model.ShippingAddress
-            : foundCustomer.ShippingAddress;
+            : customer.ShippingAddress;
 
         await _repository.Edit(modifiedCustomer);
-        return new ObjectResult(modifiedCustomer);
+        
+        return NoContent();
     }
 
     [HttpDelete]
     public async Task<IActionResult> Delete(int id)
     {
         var customer = await _repository.Get(id);
-        if (customer is null) return NotFound();
+        if (customer is null) 
+            return NotFound();
 
         await _repository.Remove(customer);
+        
         return Ok();
     }
 }
