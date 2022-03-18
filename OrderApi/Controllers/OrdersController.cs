@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Models;
+using ProductApi.Models;
 using RestSharp;
 
 namespace OrderApi.Controllers;
@@ -140,6 +141,47 @@ public class OrdersController : ControllerBase
         // If the order could not be created, "return no content".
         return NoContent();
     }
+
+    [HttpPut("{id:int}/cancel")]
+    public IActionResult CancelOrder(int id)
+    {
+        var order = repository.Get(id);
+        if (order is null) return NotFound("Order not found");
+
+        order.OrderStatus = OrderStatus.Canceled;
+        repository.Edit(order);
+
+        var prodIds = order.OrderItems.Select(x => x.ProductId);
+        var orderedProducts = GetOrderedProducts(prodIds);
+        foreach (var oi in order.OrderItems)
+        {
+            var foundProduct = orderedProducts.FirstOrDefault(p => p.Id == oi.ProductId);
+            if (foundProduct is not null)
+                if (oi.ProductId == foundProduct.Id)
+                    oi.Product = foundProduct;
+        }
+
+        // build up Product Data for removal
+        var productData = new List<ProductData>();
+        foreach (var orderItem in order.OrderItems)
+        {
+            var prodData = new ProductData
+            {
+                ProductId = orderItem.Product.Id,
+                Quantity = orderItem.Quantity
+            };
+            productData.Add(prodData);
+        }
+
+        // remove reservations
+        var productService = new RestClient("http://localhost:8000/products/reserve");
+        var productRequest = new RestRequest().AddJsonBody(productData);
+        var productResponse = productService.DeleteAsync(productRequest);
+        productResponse.Wait();
+
+        return NoContent();
+    }
+
 
     private List<Product> GetOrderedProducts(IEnumerable<int> productIds)
     {

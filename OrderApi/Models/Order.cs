@@ -14,5 +14,5 @@ public class Order
     public IEnumerable<OrderItem> OrderItems { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;
+    public OrderStatus OrderStatus { get; set; }
 }

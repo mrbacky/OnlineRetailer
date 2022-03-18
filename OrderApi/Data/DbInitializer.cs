@@ -36,7 +36,8 @@ public class DbInitializer : IDbInitializer
                         OrderId = 1,
                         Quantity = 2
                     }
-                }
+                },
+                OrderStatus = OrderStatus.Accepted
             },
             new()
             {
@@ -56,7 +57,8 @@ public class DbInitializer : IDbInitializer
                         OrderId = 2,
                         Quantity = 3
                     }
-                }
+                },
+                OrderStatus = OrderStatus.Accepted
             }
         };
 
