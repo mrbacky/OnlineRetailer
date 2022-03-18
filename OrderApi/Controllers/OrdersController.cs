@@ -20,16 +20,14 @@ public class OrdersController : ControllerBase
         repository = repos;
     }
 
-    // GET: orders
     [HttpGet]
-    public IEnumerable<Order> Get()
+    public IEnumerable<Order> GetAllOrders()
     {
         return repository.GetAll();
     }
 
-    // GET orders/5
-    [HttpGet("{id}", Name = "GetOrder")]
-    public IActionResult Get(int id)
+    [HttpGet("{id}")]
+    public IActionResult GetOrderById(int id)
     {
         var item = repository.Get(id);
         if (item == null) return NotFound();
@@ -40,14 +38,16 @@ public class OrdersController : ControllerBase
     [HttpGet("customer/{id}")]
     public IActionResult GetCustomerOrders(int id)
     {
-        var item = repository.Get(id);
-        if (item == null) return NotFound();
-        return new ObjectResult(item);
+        var orders = repository.GetAll();
+        if (orders == null) return NotFound();
+
+        var customerOrders = orders.Where(order => order.CustomerId == id);
+        return Ok(customerOrders);
     }
 
     // POST orders
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] Order createOrder)
+    public async Task<IActionResult> CreateOrder([FromBody] Order createOrder)
     {
         if (createOrder == null) return BadRequest();
 
@@ -106,8 +106,7 @@ public class OrdersController : ControllerBase
                 OrderStatus = OrderStatus.Accepted
             };
             var created = repository.Add(newOrder);
-            return CreatedAtRoute("GetOrder",
-                new {id = created.Id}, created);
+            return Ok(created);
         }
 
         // If the order could not be created, "return no content".
