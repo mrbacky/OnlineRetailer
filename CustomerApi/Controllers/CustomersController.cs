@@ -1,5 +1,6 @@
 ﻿using CustomerApi.Data;
 using CustomerApi.Dtos;
+using CustomerApi.Enums;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,14 +51,22 @@ public class CustomersController : ControllerBase
         return Ok(created);
     }
 
-    [HttpPost("{customerId:int}/Credit")]
-    public async Task<IActionResult> UserCreatedOrder(int customerId)
+    [HttpPut("{customerId:int}/Credit")]
+    public async Task<IActionResult> UserCreatedOrder(int customerId, [FromBody] CreditAction action)
     {
         var customer = await _repository.Get(customerId);
         if (customer is null)
             return BadRequest($"Customer with ID: {customerId} does not exist");
 
-        customer.CreditStanding -= 1;
+        switch (action)
+        {
+            case CreditAction.DecreaseCredit:
+                customer.CreditStanding -= 1;
+                break;
+            case CreditAction.IncreaseCredit:
+                customer.CreditStanding += 1;
+                break;
+        }
         await _repository.Edit(customer);
 
         return NoContent();
