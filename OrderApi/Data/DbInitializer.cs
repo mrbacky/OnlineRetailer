@@ -16,28 +16,47 @@ public class DbInitializer : IDbInitializer
         // Look for any Products
         if (context.Orders.Any()) return; // DB has been seeded
 
-        var orderItem1 = new OrderItem
-        {
-            ProductId = 1,
-            OrderId = 1,
-            Quantity = 3
-        };
-
-        var orderItem2 = new OrderItem
-        {
-            ProductId = 2,
-            OrderId = 1,
-            Quantity = 9
-        };
-
-
         var orders = new List<Order>
         {
             new()
             {
                 CustomerId = 1,
                 Date = DateTime.Now,
-                OrderItems = new List<OrderItem> {orderItem1, orderItem2}
+                OrderItems = new List<OrderItem>
+                {
+                    new()
+                    {
+                        ProductId = 2,
+                        OrderId = 1,
+                        Quantity = 5
+                    },
+                    new()
+                    {
+                        ProductId = 4,
+                        OrderId = 1,
+                        Quantity = 2
+                    }
+                }
+            },
+            new()
+            {
+                CustomerId = 2,
+                Date = DateTime.Now,
+                OrderItems = new List<OrderItem>
+                {
+                    new()
+                    {
+                        ProductId = 1,
+                        OrderId = 2,
+                        Quantity = 2
+                    },
+                    new()
+                    {
+                        ProductId = 2,
+                        OrderId = 2,
+                        Quantity = 3
+                    }
+                }
             }
         };
 
