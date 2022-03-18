@@ -2,6 +2,6 @@ namespace CustomerApi.Enums;
 
 public enum CreditAction
 {
-    DecreaseCredit,
-    IncreaseCredit
+    DecreaseCredit = 1,
+    IncreaseCredit = 2
 }
