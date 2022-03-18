@@ -43,7 +43,7 @@ public class Startup
             var services = scope.ServiceProvider;
             var dbContext = services.GetService<CustomerApiContext>();
             var dbInitializer = services.GetService<IDbInitializer>();
-            dbInitializer.Initialize(dbContext);
+            dbInitializer?.Initialize(dbContext ?? throw new InvalidOperationException());
         }
 
         if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
