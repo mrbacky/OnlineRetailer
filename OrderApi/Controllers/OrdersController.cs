@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Models;
@@ -37,6 +36,15 @@ public class OrdersController : ControllerBase
         return new ObjectResult(item);
     }
 
+    // GET orders/5
+    [HttpGet("customer/{id}")]
+    public IActionResult GetCustomerOrders(int id)
+    {
+        var item = repository.Get(id);
+        if (item == null) return NotFound();
+        return new ObjectResult(item);
+    }
+
     // POST orders
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] Order createOrder)
@@ -51,11 +59,11 @@ public class OrdersController : ControllerBase
         var foundCustomer = customerResponse;
 
         // customer null check
-        if (foundCustomer == null || foundCustomer.Id == 0)
+        if (foundCustomer == null)
             return NotFound($"Customer with Id: {createOrder.CustomerId} does not exist.");
 
         // Customer orders check
-        if (foundCustomer.hasOutstandingBills)
+        if (foundCustomer.CreditStanding < 0)
             return BadRequest("Order declined. You have already an order you need to pay for.");
 
         // Get products from order

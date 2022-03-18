@@ -35,6 +35,7 @@ public class DbInitializer : IDbInitializer
         {
             new()
             {
+                CustomerId = 1,
                 Date = DateTime.Now,
                 OrderItems = new List<OrderItem> {orderItem1, orderItem2}
             }
