@@ -32,7 +32,8 @@ public class OrdersController : ControllerBase
         var order = repository.Get(id);
         if (order == null) return NotFound();
 
-        var orderedProducts = GetOrderedProducts(order);
+        var prodIds = order.OrderItems.Select(x => x.ProductId);
+        var orderedProducts = GetOrderedProducts(prodIds);
 
         foreach (var oi in order.OrderItems)
         {
@@ -50,9 +51,27 @@ public class OrdersController : ControllerBase
     public IActionResult GetCustomerOrders(int id)
     {
         var orders = repository.GetAll();
-        if (orders == null) return NotFound();
+        var customerOrders = new List<Order>();
+        foreach (var o in orders)
+        {
+            var order = repository.Get(o.Id);
+            if (order == null) return NotFound();
 
-        var customerOrders = orders.Where(order => order.CustomerId == id);
+            var prodIds = order.OrderItems.Select(x => x.ProductId);
+            var orderedProducts = GetOrderedProducts(prodIds);
+
+            foreach (var oi in order.OrderItems)
+            {
+                var foundProduct = orderedProducts.FirstOrDefault(p => p.Id == oi.ProductId);
+                if (foundProduct is not null)
+                    if (oi.ProductId == foundProduct.Id)
+                        oi.Product = foundProduct;
+            }
+
+            customerOrders.Add(order);
+        }
+
+
         return Ok(customerOrders);
     }
 
@@ -78,7 +97,8 @@ public class OrdersController : ControllerBase
             return BadRequest("Order declined. You have already an order you need to pay for.");
 
         // Get products from order
-        var orderedProducts = GetOrderedProducts(createOrder);
+        var prodIds = createOrder.OrderItems.Select(x => x.ProductId);
+        var orderedProducts = GetOrderedProducts(prodIds);
 
         // Checking items availability and updating ordered products
         if (orderedProducts is not null)
@@ -121,9 +141,8 @@ public class OrdersController : ControllerBase
         return NoContent();
     }
 
-    private List<Product> GetOrderedProducts(Order createOrder)
+    private List<Product> GetOrderedProducts(IEnumerable<int> productIds)
     {
-        var productIds = createOrder.OrderItems.Select(oi => oi.ProductId).ToArray();
         var productService = new RestClient("http://localhost:8000/products/inRange");
         var productRequest = new RestRequest().AddJsonBody(productIds);
         var productResponse = productService.GetAsync<List<Product>>(productRequest);
