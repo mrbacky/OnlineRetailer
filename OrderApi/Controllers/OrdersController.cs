@@ -29,9 +29,20 @@ public class OrdersController : ControllerBase
     [HttpGet("{id}")]
     public IActionResult GetOrderById(int id)
     {
-        var item = repository.Get(id);
-        if (item == null) return NotFound();
-        return new ObjectResult(item);
+        var order = repository.Get(id);
+        if (order == null) return NotFound();
+
+        var orderedProducts = GetOrderedProducts(order);
+
+        foreach (var oi in order.OrderItems)
+        {
+            var foundProduct = orderedProducts.FirstOrDefault(p => p.Id == oi.ProductId);
+            if (foundProduct is not null)
+                if (oi.ProductId == foundProduct.Id)
+                    oi.Product = foundProduct;
+        }
+
+        return Ok(order);
     }
 
     // GET orders/5
@@ -67,12 +78,7 @@ public class OrdersController : ControllerBase
             return BadRequest("Order declined. You have already an order you need to pay for.");
 
         // Get products from order
-        var productIds = createOrder.OrderItems.Select(oi => oi.ProductId).ToArray();
-        var productService = new RestClient("http://localhost:8000/products/inRange");
-        var productRequest = new RestRequest().AddJsonBody(productIds);
-        var productResponse = productService.GetAsync<List<Product>>(productRequest);
-        productResponse.Wait();
-        var orderedProducts = productResponse.Result;
+        var orderedProducts = GetOrderedProducts(createOrder);
 
         // Checking items availability and updating ordered products
         if (orderedProducts is not null)
@@ -90,7 +96,7 @@ public class OrdersController : ControllerBase
 
         var productsToUpdate = orderedProducts!;
         // Update products in product service
-        productService = new RestClient("http://localhost:8000/products/updateCollection");
+        var productService = new RestClient("http://localhost:8000/products/updateCollection");
         var updateProductRequest = new RestRequest().AddJsonBody(productsToUpdate);
         var updateProductsResponse = productService.PutAsync(updateProductRequest);
         updateProductsResponse.Wait();
@@ -106,10 +112,23 @@ public class OrdersController : ControllerBase
                 OrderStatus = OrderStatus.Accepted
             };
             var created = repository.Add(newOrder);
-            return Ok(created);
+
+
+            return Ok(new {orderId = created.Id});
         }
 
         // If the order could not be created, "return no content".
         return NoContent();
+    }
+
+    private List<Product> GetOrderedProducts(Order createOrder)
+    {
+        var productIds = createOrder.OrderItems.Select(oi => oi.ProductId).ToArray();
+        var productService = new RestClient("http://localhost:8000/products/inRange");
+        var productRequest = new RestRequest().AddJsonBody(productIds);
+        var productResponse = productService.GetAsync<List<Product>>(productRequest);
+        productResponse.Wait();
+        var orderedProducts = productResponse.Result;
+        return orderedProducts;
     }
 }
