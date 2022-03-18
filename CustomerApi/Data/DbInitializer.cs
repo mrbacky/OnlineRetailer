@@ -16,21 +16,27 @@ public class DbInitializer : IDbInitializer
 
         var customers = new List<Customer>
         {
-            new()
-            {
-                RegistrationNumber = "DK-1111", Name = "Apple", Email = "contact@apple.com", Phone = "204113562",
-                BillingAddress = "Stormgade 101", ShippingAddress = "Stormgade 101"
-            },
-            new()
-            {
-                RegistrationNumber = "DK-5555", Name = "Netflix", Email = "contact@netflix.com", Phone = "4234243",
-                BillingAddress = "Stormgade 22", ShippingAddress = "Stormgade 22"
-            },
-            new()
-            {
-                RegistrationNumber = "DK-2222", Name = "Amazon", Email = "contact@amazon.com", Phone = "2342534",
-                BillingAddress = "Stormgade 29", ShippingAddress = "Stormgade 29"
-            }
+            new(
+                registrationNumber: "DK-1111", 
+                name: "Apple", 
+                email: "contact@apple.com", 
+                phone: "204113562",
+                billingAddress: "Stormgade 101",
+                shippingAddress: "Stormgade 101"),
+            new(
+                registrationNumber: "DK-5555", 
+                name: "Netflix", 
+                email: "contact@netflix.com", 
+                phone: "4234243",
+                billingAddress: "Stormgade 22",
+                shippingAddress: "Stormgade 22"),            
+            new(
+                registrationNumber: "DK-2222", 
+                name: "Amazon", 
+                email: "contact@amazon.com", 
+                phone: "2342534",
+                billingAddress: "Stormgade 29",
+                shippingAddress: "Stormgade 29")
         };
         Console.WriteLine("*****>>> Customers: " + customers);
         context.Customers.AddRange(customers);

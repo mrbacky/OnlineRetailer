@@ -20,7 +20,7 @@ public class CustomerRepository : IRepository<Customer>
 
     public async Task<Customer?> Get(int id)
     {
-        return await _db.Customers.FirstAsync(c => c.Id == id);
+        return await _db.Customers.FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<Customer> Add(Customer entity)
@@ -36,16 +36,9 @@ public class CustomerRepository : IRepository<Customer>
         await _db.SaveChangesAsync();
     }
 
-    public async Task Remove(int id)
+    public async Task Remove(Customer customer)
     {
-        var customer = await _db.Customers.FirstAsync(c => c.Id == id);
         _db.Customers.Remove(customer);
         await _db.SaveChangesAsync();
-    }
-
-    public async Task ChangeCreditStanding(int customerId, int creditchange)
-    {
-        var customer = await _db.Customers.FirstAsync(c => c.Id == customerId);
-        // _db.Entry(customer).Entity.CreditStanding + creditchange;
     }
 }

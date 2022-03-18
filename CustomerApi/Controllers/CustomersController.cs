@@ -1,4 +1,5 @@
 ﻿using CustomerApi.Data;
+using CustomerApi.Dtos;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,23 +25,42 @@ public class CustomersController : ControllerBase
     }
 
 
-    [HttpGet("{id}")]
-    public IActionResult GetCustomerById(int id)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetCustomerById(int id)
     {
-        var customer = _repository.Get(id);
+        var customer = await _repository.Get(id);
         if (customer == null) return NotFound();
+        
         return Ok(customer);
     }
 
     // POST orders
     [HttpPost]
-    public async Task<IActionResult> CreateCustomerAsync([FromBody] Customer customer)
+    public async Task<IActionResult> CreateCustomerAsync([FromBody] NewCustomerDto newCustomer)
     {
-        if (customer == null) return BadRequest();
-
-        var newCustomer = await _repository.Add(customer);
-        var created = await _repository.Get(newCustomer.Id);
+        var customer = new Customer(
+            registrationNumber: newCustomer.RegistrationNumber,
+            name: newCustomer.Name,
+            email: newCustomer.Email,
+            phone: newCustomer.Phone,
+            billingAddress: newCustomer.BillingAddress,
+            shippingAddress: newCustomer.ShippingAddress);
+        
+        var created = await _repository.Add(customer);
         return Ok(created);
+    }
+
+    [HttpPost("{customerId:int}/Credit")]
+    public async Task<IActionResult> UserCreatedOrder(int customerId)
+    {
+        var customer = await _repository.Get(customerId);
+        if (customer is null)
+            return BadRequest($"Customer with ID: {customerId} does not exist");
+
+        customer.CreditStanding -= 1;
+        await _repository.Edit(customer);
+
+        return NoContent();
     }
 
     // PUT products/5
@@ -49,7 +69,6 @@ public class CustomersController : ControllerBase
     {
         var foundCustomer = await _repository.Get(model.Id);
 
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (foundCustomer == null) return NotFound($"Customer with Id: [{model.Id}] was not found.");
 
         var modifiedCustomer = foundCustomer;
@@ -69,9 +88,10 @@ public class CustomersController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> Delete(int id)
     {
-        if (id == null) return NotFound();
+        var customer = await _repository.Get(id);
+        if (customer is null) return NotFound();
 
-        await _repository.Remove(id);
+        await _repository.Remove(customer);
         return Ok();
     }
 }
