@@ -123,6 +123,12 @@ public class OrdersController : ControllerBase
         var updateProductRequest = new RestRequest().AddJsonBody(reserveItems);
         var updateProductsResponse = productService.PostAsync(updateProductRequest);
         updateProductsResponse.Wait();
+        
+        // Update customer credit
+        var customerService2 = new RestClient($"http://localhost:8000/Customers/{foundCustomer.Id}/Credit");
+        var customerRequest2 = new RestRequest().AddJsonBody("DecreaseCredit");
+        var customerResponse2 = customerService2.DeleteAsync(customerRequest2);
+        customerResponse2.Wait();
 
 
         if (updateProductsResponse.IsCompletedSuccessfully)
@@ -168,11 +174,51 @@ public class OrdersController : ControllerBase
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.DeleteAsync(productRequest);
         productResponse.Wait();
+        
+        // Update customer credit
+        var customerService = new RestClient($"http://localhost:8000/Customers/{order.CustomerId}/Credit");
+        var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
+        var customerResponse = customerService.DeleteAsync(customerRequest);
+        customerResponse.Wait();
 
         return NoContent();
     }
 
+    [HttpPut("{id:int}/Ship")]
+    public IActionResult ShipOrder(int id)
+    {
+        var order = repository.Get(id);
+        if (order is null) return NotFound("Order not found");
 
+        order.OrderStatus = OrderStatus.Shipped;
+        repository.Edit(order);
+        
+        var productData = new List<ProductData>();
+        foreach (var orderItem in order.OrderItems)
+        {
+            var prodData = new ProductData
+            {
+                ProductId = orderItem.ProductId,
+                Quantity = orderItem.Quantity
+            };
+            productData.Add(prodData);
+        }
+
+        // remove reservations
+        var productService = new RestClient("http://localhost:8000/products/Sell");
+        var productRequest = new RestRequest().AddJsonBody(productData);
+        var productResponse = productService.PostAsync(productRequest);
+        productResponse.Wait();
+        
+        // Update customer credit
+        var customerService = new RestClient($"http://localhost:8000/Customers/{order.CustomerId}/Credit");
+        var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
+        var customerResponse = customerService.DeleteAsync(customerRequest);
+        customerResponse.Wait();
+
+        return NoContent();
+    }
+    
     private List<Product> GetOrderedProducts(IEnumerable<int> productIds)
     {
         var productService = new RestClient("http://localhost:8000/products/inRange");
