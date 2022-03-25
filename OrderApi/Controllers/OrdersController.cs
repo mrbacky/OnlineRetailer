@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using OrderApi.Data;
 using OrderApi.Models;
 using ProductApi.Models;
@@ -18,11 +19,11 @@ public class OrdersController : ControllerBase
     private readonly string _customerBaseUrl;
     private readonly string _productBaseUrl;
 
-    public OrdersController(IRepository<Order> repos)
+    public OrdersController(IRepository<Order> repos, IConfiguration config)
     {
         _repository = repos;
-        _customerBaseUrl = Environment.GetEnvironmentVariable("CustomerBaseUrl");
-        _productBaseUrl = Environment.GetEnvironmentVariable("ProductBaseUrl");
+        _customerBaseUrl = config.GetValue<string>("CustomerBaseUrl");
+        _productBaseUrl = config.GetValue<string>("ProductBaseUrl");
     }
 
     [HttpGet]
