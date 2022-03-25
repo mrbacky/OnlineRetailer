@@ -100,26 +100,28 @@ public class OrdersController : ControllerBase
         // Get products from order
         var prodIds = createOrder.OrderItems.Select(x => x.ProductId);
         var orderedProducts = GetOrderedProducts(prodIds);
+        var reserveItems = new List<dynamic>();
 
         // Checking items availability and updating ordered products
         if (orderedProducts is not null)
             foreach (var prod in orderedProducts)
             {
-                var matchedOrderItem = createOrder.OrderItems.First(oi => oi.ProductId == prod.Id);
+                var matchedOrderItem = createOrder.OrderItems.FirstOrDefault(oi => oi.ProductId == prod.Id);
+                if (matchedOrderItem is null)
+                    return BadRequest($"Product with ID: {prod.Id} does not exist.");
+                
                 var isItemAvailable = matchedOrderItem.Quantity <= prod.AvailableToOrder;
-                if (isItemAvailable)
-                    prod.ItemsReserved += matchedOrderItem.Quantity;
-                else if (!isItemAvailable)
+                if (!isItemAvailable)
                     return NotFound(
                         $"There is not enough items of product: ID: {prod.Id}, Product Name: {prod.Name}. " +
                         $"Available items for order: {prod.AvailableToOrder}");
+                reserveItems.Add(new{ProductId = prod.Id, Quantity = matchedOrderItem.Quantity});
             }
 
-        var productsToUpdate = orderedProducts!;
-        // Update products in product service
-        var productService = new RestClient("http://localhost:8000/products/updateCollection");
-        var updateProductRequest = new RestRequest().AddJsonBody(productsToUpdate);
-        var updateProductsResponse = productService.PutAsync(updateProductRequest);
+        // Send order to product service
+        var productService = new RestClient("http://localhost:8000/products/Reserve");
+        var updateProductRequest = new RestRequest().AddJsonBody(reserveItems);
+        var updateProductsResponse = productService.PostAsync(updateProductRequest);
         updateProductsResponse.Wait();
 
 
@@ -138,8 +140,7 @@ public class OrdersController : ControllerBase
             return Ok(new {orderId = created.Id});
         }
 
-        // If the order could not be created, "return no content".
-        return NoContent();
+        return BadRequest($"Response from product service: {updateProductsResponse.Exception}");
     }
 
     [HttpPut("{id:int}/cancel")]
