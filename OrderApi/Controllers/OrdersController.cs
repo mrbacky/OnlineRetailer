@@ -133,7 +133,7 @@ public class OrdersController : ControllerBase
         // Update customer credit
         var customerService2 = new RestClient($"{_customerBaseUrl}/Customers/{foundCustomer.Id}/Credit");
         var customerRequest2 = new RestRequest().AddJsonBody("DecreaseCredit");
-        var customerResponse2 = customerService2.DeleteAsync(customerRequest2);
+        var customerResponse2 = customerService2.PutAsync(customerRequest2);
         customerResponse2.Wait();
 
 
@@ -184,7 +184,7 @@ public class OrdersController : ControllerBase
         // Update customer credit
         var customerService = new RestClient($"{_customerBaseUrl}/Customers/{order.CustomerId}/Credit");
         var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
-        var customerResponse = customerService.DeleteAsync(customerRequest);
+        var customerResponse = customerService.PutAsync(customerRequest);
         customerResponse.Wait();
 
         return NoContent();
@@ -210,7 +210,6 @@ public class OrdersController : ControllerBase
             productData.Add(prodData);
         }
 
-        // remove reservations
         var productService = new RestClient($"{_productBaseUrl}/products/Sell");
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.PostAsync(productRequest);
@@ -219,7 +218,7 @@ public class OrdersController : ControllerBase
         // Update customer credit
         var customerService = new RestClient($"{_customerBaseUrl}/Customers/{order.CustomerId}/Credit");
         var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
-        var customerResponse = customerService.DeleteAsync(customerRequest);
+        var customerResponse = customerService.PutAsync(customerRequest);
         customerResponse.Wait();
 
         return NoContent();
