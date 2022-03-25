@@ -14,23 +14,23 @@ namespace OrderApi.Controllers;
 [Route("[controller]")]
 public class OrdersController : ControllerBase
 {
-    private readonly IRepository<Order> repository;
+    private readonly IRepository<Order> _repository;
 
     public OrdersController(IRepository<Order> repos)
     {
-        repository = repos;
+        _repository = repos;
     }
 
     [HttpGet]
     public IEnumerable<Order> GetAllOrders()
     {
-        return repository.GetAll();
+        return _repository.GetAll();
     }
 
     [HttpGet("{id}")]
     public IActionResult GetOrderById(int id)
     {
-        var order = repository.Get(id);
+        var order = _repository.Get(id);
         if (order == null) return NotFound();
 
         var prodIds = order.OrderItems.Select(x => x.ProductId);
@@ -51,11 +51,11 @@ public class OrdersController : ControllerBase
     [HttpGet("customer/{id}")]
     public IActionResult GetCustomerOrders(int id)
     {
-        var orders = repository.GetAll();
+        var orders = _repository.GetAll();
         var customerOrders = new List<Order>();
         foreach (var o in orders)
         {
-            var order = repository.Get(o.Id);
+            var order = _repository.Get(o.Id);
             if (order == null) return NotFound();
 
             var prodIds = order.OrderItems.Select(x => x.ProductId);
@@ -140,7 +140,7 @@ public class OrdersController : ControllerBase
                 OrderItems = createOrder.OrderItems,
                 OrderStatus = OrderStatus.Accepted
             };
-            var created = repository.Add(newOrder);
+            var created = _repository.Add(newOrder);
 
 
             return Ok(new {orderId = created.Id});
@@ -152,11 +152,11 @@ public class OrdersController : ControllerBase
     [HttpPut("{id:int}/Cancel")]
     public IActionResult CancelOrder(int id)
     {
-        var order = repository.Get(id);
+        var order = _repository.Get(id);
         if (order is null) return NotFound("Order not found");
 
         order.OrderStatus = OrderStatus.Canceled;
-        repository.Edit(order);
+        _repository.Edit(order);
 
         var productData = new List<ProductData>();
         foreach (var orderItem in order.OrderItems)
@@ -187,11 +187,11 @@ public class OrdersController : ControllerBase
     [HttpPut("{id:int}/Ship")]
     public IActionResult ShipOrder(int id)
     {
-        var order = repository.Get(id);
+        var order = _repository.Get(id);
         if (order is null) return NotFound("Order not found");
 
         order.OrderStatus = OrderStatus.Shipped;
-        repository.Edit(order);
+        _repository.Edit(order);
         
         var productData = new List<ProductData>();
         foreach (var orderItem in order.OrderItems)
