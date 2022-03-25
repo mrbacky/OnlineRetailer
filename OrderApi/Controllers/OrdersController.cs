@@ -52,8 +52,9 @@ public class OrdersController : ControllerBase
     public IActionResult GetCustomerOrders(int id)
     {
         var orders = _repository.GetAll();
-        var customerOrders = new List<Order>();
-        foreach (var o in orders)
+        var customerOrders = orders.Where(o => o.CustomerId == id);
+        var customerDetailOrders = new List<Order>();
+        foreach (var o in customerOrders)
         {
             var order = _repository.Get(o.Id);
             if (order == null) return NotFound();
@@ -69,11 +70,11 @@ public class OrdersController : ControllerBase
                         oi.Product = foundProduct;
             }
 
-            customerOrders.Add(order);
+            customerDetailOrders.Add(order);
         }
 
 
-        return Ok(customerOrders);
+        return Ok(customerDetailOrders);
     }
 
     // POST orders
@@ -109,13 +110,13 @@ public class OrdersController : ControllerBase
                 var matchedOrderItem = createOrder.OrderItems.FirstOrDefault(oi => oi.ProductId == prod.Id);
                 if (matchedOrderItem is null)
                     return BadRequest($"Product with ID: {prod.Id} does not exist.");
-                
+
                 var isItemAvailable = matchedOrderItem.Quantity <= prod.AvailableToOrder;
                 if (!isItemAvailable)
                     return NotFound(
                         $"There is not enough items of product: ID: {prod.Id}, Product Name: {prod.Name}. " +
                         $"Available items for order: {prod.AvailableToOrder}");
-                reserveItems.Add(new ProductData(){ProductId = prod.Id, Quantity = matchedOrderItem.Quantity});
+                reserveItems.Add(new ProductData {ProductId = prod.Id, Quantity = matchedOrderItem.Quantity});
             }
 
         // Send order to product service
@@ -123,7 +124,7 @@ public class OrdersController : ControllerBase
         var updateProductRequest = new RestRequest().AddJsonBody(reserveItems);
         var updateProductsResponse = productService.PostAsync(updateProductRequest);
         updateProductsResponse.Wait();
-        
+
         // Update customer credit
         var customerService2 = new RestClient($"http://localhost:8000/Customers/{foundCustomer.Id}/Credit");
         var customerRequest2 = new RestRequest().AddJsonBody("DecreaseCredit");
@@ -174,7 +175,7 @@ public class OrdersController : ControllerBase
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.DeleteAsync(productRequest);
         productResponse.Wait();
-        
+
         // Update customer credit
         var customerService = new RestClient($"http://localhost:8000/Customers/{order.CustomerId}/Credit");
         var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
@@ -192,7 +193,7 @@ public class OrdersController : ControllerBase
 
         order.OrderStatus = OrderStatus.Shipped;
         _repository.Edit(order);
-        
+
         var productData = new List<ProductData>();
         foreach (var orderItem in order.OrderItems)
         {
@@ -209,7 +210,7 @@ public class OrdersController : ControllerBase
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.PostAsync(productRequest);
         productResponse.Wait();
-        
+
         // Update customer credit
         var customerService = new RestClient($"http://localhost:8000/Customers/{order.CustomerId}/Credit");
         var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
@@ -218,7 +219,7 @@ public class OrdersController : ControllerBase
 
         return NoContent();
     }
-    
+
     private List<Product> GetOrderedProducts(IEnumerable<int> productIds)
     {
         var productService = new RestClient("http://localhost:8000/products/inRange");
