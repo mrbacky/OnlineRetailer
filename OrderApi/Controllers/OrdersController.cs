@@ -100,7 +100,7 @@ public class OrdersController : ControllerBase
         // Get products from order
         var prodIds = createOrder.OrderItems.Select(x => x.ProductId);
         var orderedProducts = GetOrderedProducts(prodIds);
-        var reserveItems = new List<dynamic>();
+        var reserveItems = new List<ProductData>();
 
         // Checking items availability and updating ordered products
         if (orderedProducts is not null)
@@ -115,7 +115,7 @@ public class OrdersController : ControllerBase
                     return NotFound(
                         $"There is not enough items of product: ID: {prod.Id}, Product Name: {prod.Name}. " +
                         $"Available items for order: {prod.AvailableToOrder}");
-                reserveItems.Add(new{ProductId = prod.Id, Quantity = matchedOrderItem.Quantity});
+                reserveItems.Add(new ProductData(){ProductId = prod.Id, Quantity = matchedOrderItem.Quantity});
             }
 
         // Send order to product service
@@ -143,7 +143,7 @@ public class OrdersController : ControllerBase
         return BadRequest($"Response from product service: {updateProductsResponse.Exception}");
     }
 
-    [HttpPut("{id:int}/cancel")]
+    [HttpPut("{id:int}/Cancel")]
     public IActionResult CancelOrder(int id)
     {
         var order = repository.Get(id);
@@ -152,30 +152,19 @@ public class OrdersController : ControllerBase
         order.OrderStatus = OrderStatus.Canceled;
         repository.Edit(order);
 
-        var prodIds = order.OrderItems.Select(x => x.ProductId);
-        var orderedProducts = GetOrderedProducts(prodIds);
-        foreach (var oi in order.OrderItems)
-        {
-            var foundProduct = orderedProducts.FirstOrDefault(p => p.Id == oi.ProductId);
-            if (foundProduct is not null)
-                if (oi.ProductId == foundProduct.Id)
-                    oi.Product = foundProduct;
-        }
-
-        // build up Product Data for removal
         var productData = new List<ProductData>();
         foreach (var orderItem in order.OrderItems)
         {
             var prodData = new ProductData
             {
-                ProductId = orderItem.Product.Id,
+                ProductId = orderItem.ProductId,
                 Quantity = orderItem.Quantity
             };
             productData.Add(prodData);
         }
 
         // remove reservations
-        var productService = new RestClient("http://localhost:8000/products/reserve");
+        var productService = new RestClient("http://localhost:8000/products/Reserve");
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.DeleteAsync(productRequest);
         productResponse.Wait();
