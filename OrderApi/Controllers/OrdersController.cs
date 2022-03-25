@@ -101,7 +101,7 @@ public class OrdersController : ControllerBase
 
         // Customer orders check
         if (foundCustomer.CreditStanding < 0)
-            return BadRequest("Order declined. You have already an order you need to pay for.");
+            return BadRequest("Order declined. Your credit standing is too low.");
 
         // Get products from order
         var prodIds = createOrder.OrderItems.Select(x => x.ProductId);
