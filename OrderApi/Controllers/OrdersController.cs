@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using OrderApi.Data;
 using OrderApi.Models;
 using ProductApi.Models;
@@ -15,10 +16,14 @@ namespace OrderApi.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IRepository<Order> _repository;
+    private readonly string _customerBaseUrl;
+    private readonly string _productBaseUrl;
 
-    public OrdersController(IRepository<Order> repos)
+    public OrdersController(IRepository<Order> repos, IConfiguration config)
     {
         _repository = repos;
+        _customerBaseUrl = config.GetValue<string>("CustomerBaseUrl");
+        _productBaseUrl = config.GetValue<string>("ProductBaseUrl");
     }
 
     [HttpGet]
@@ -84,7 +89,7 @@ public class OrdersController : ControllerBase
         if (createOrder == null) return BadRequest();
 
         // fetching customer
-        var customerService = new RestClient("http://localhost:6000/customers");
+        var customerService = new RestClient($"{_customerBaseUrl}/customers");
         var customerRequest = new RestRequest(createOrder.CustomerId.ToString());
         var customerResponse = await customerService.GetAsync<Customer>(customerRequest);
         // customerResponse.Wait();
@@ -96,7 +101,7 @@ public class OrdersController : ControllerBase
 
         // Customer orders check
         if (foundCustomer.CreditStanding < 0)
-            return BadRequest("Order declined. You have already an order you need to pay for.");
+            return BadRequest("Order declined. Your credit standing is too low.");
 
         // Get products from order
         var prodIds = createOrder.OrderItems.Select(x => x.ProductId);
@@ -120,15 +125,15 @@ public class OrdersController : ControllerBase
             }
 
         // Send order to product service
-        var productService = new RestClient("http://localhost:8000/products/Reserve");
+        var productService = new RestClient($"{_productBaseUrl}/products/Reserve");
         var updateProductRequest = new RestRequest().AddJsonBody(reserveItems);
         var updateProductsResponse = productService.PostAsync(updateProductRequest);
         updateProductsResponse.Wait();
 
         // Update customer credit
-        var customerService2 = new RestClient($"http://localhost:8000/Customers/{foundCustomer.Id}/Credit");
+        var customerService2 = new RestClient($"{_customerBaseUrl}/Customers/{foundCustomer.Id}/Credit");
         var customerRequest2 = new RestRequest().AddJsonBody("DecreaseCredit");
-        var customerResponse2 = customerService2.DeleteAsync(customerRequest2);
+        var customerResponse2 = customerService2.PutAsync(customerRequest2);
         customerResponse2.Wait();
 
 
@@ -171,15 +176,15 @@ public class OrdersController : ControllerBase
         }
 
         // remove reservations
-        var productService = new RestClient("http://localhost:8000/products/Reserve");
+        var productService = new RestClient($"{_productBaseUrl}/products/Reserve");
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.DeleteAsync(productRequest);
         productResponse.Wait();
 
         // Update customer credit
-        var customerService = new RestClient($"http://localhost:8000/Customers/{order.CustomerId}/Credit");
+        var customerService = new RestClient($"{_customerBaseUrl}/Customers/{order.CustomerId}/Credit");
         var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
-        var customerResponse = customerService.DeleteAsync(customerRequest);
+        var customerResponse = customerService.PutAsync(customerRequest);
         customerResponse.Wait();
 
         return NoContent();
@@ -205,16 +210,15 @@ public class OrdersController : ControllerBase
             productData.Add(prodData);
         }
 
-        // remove reservations
-        var productService = new RestClient("http://localhost:8000/products/Sell");
+        var productService = new RestClient($"{_productBaseUrl}/products/Sell");
         var productRequest = new RestRequest().AddJsonBody(productData);
         var productResponse = productService.PostAsync(productRequest);
         productResponse.Wait();
 
         // Update customer credit
-        var customerService = new RestClient($"http://localhost:8000/Customers/{order.CustomerId}/Credit");
+        var customerService = new RestClient($"{_customerBaseUrl}/Customers/{order.CustomerId}/Credit");
         var customerRequest = new RestRequest().AddJsonBody("IncreaseCredit");
-        var customerResponse = customerService.DeleteAsync(customerRequest);
+        var customerResponse = customerService.PutAsync(customerRequest);
         customerResponse.Wait();
 
         return NoContent();
@@ -222,7 +226,7 @@ public class OrdersController : ControllerBase
 
     private List<Product> GetOrderedProducts(IEnumerable<int> productIds)
     {
-        var productService = new RestClient("http://localhost:8000/products/inRange");
+        var productService = new RestClient($"{_productBaseUrl}/products/inRange");
         var productRequest = new RestRequest().AddJsonBody(productIds);
         var productResponse = productService.GetAsync<List<Product>>(productRequest);
         productResponse.Wait();
