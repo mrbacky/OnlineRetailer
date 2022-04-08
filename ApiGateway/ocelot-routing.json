@@ -28,9 +28,24 @@
         "Get",
         "Post"
       ]
+    },
+    {
+      "DownstreamPathTemplate": "/search",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "google.com",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/google/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post"
+      ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7430"
+    "BaseUrl": "https://localhost:8080"
   }
 }
