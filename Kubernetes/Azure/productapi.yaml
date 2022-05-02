@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productapi
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productapi
+  template:
+    metadata:
+      labels:
+        app: productapi
+    spec:
+      containers:
+      - name: productapi
+        image: domco545/productapi:latest
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            cpu: 250m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: productapi
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: productapi
+  ports:
+  - protocol: TCP
+    port: 3200
+    targetPort: 8082
+    nodePort: 300020

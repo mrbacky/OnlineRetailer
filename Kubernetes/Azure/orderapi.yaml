@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderapi
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orderapi
+  template:
+    metadata:
+      labels:
+        app: orderapi
+    spec:
+      containers:
+      - name: orderapi
+        image: domco545/orderapi:latest
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+        requests:
+          cpu: 250m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orderapi
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: orderapi
+  ports:
+  - protocol: TCP
+    port: 3300
+    targetPort: 8083
+    nodePort: 300030
