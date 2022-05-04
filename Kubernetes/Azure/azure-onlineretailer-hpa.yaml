@@ -3,8 +3,8 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: azure-onlineretailer-order-hpa
 spec:
-  maxReplicas: 3 # define max replica count
-  minReplicas: 1  # define min replica count
+  maxReplicas: 4 # define max replica count
+  minReplicas: 2  # define min replica count
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -18,8 +18,8 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: azure-onlineretailer-product-hpa
 spec:
-  maxReplicas: 3 # define max replica count
-  minReplicas: 1  # define min replica count
+  maxReplicas: 4 # define max replica count
+  minReplicas: 2  # define min replica count
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -33,8 +33,8 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: azure-onlineretailer-customer-hpa
 spec:
-  maxReplicas: 3 # define max replica count
-  minReplicas: 1  # define min replica count
+  maxReplicas: 4 # define max replica count
+  minReplicas: 2  # define min replica count
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
